@@ -1,0 +1,3 @@
+*.log #log-files sollen ignoriert werden
+README.md.txt
+# Kommentare im Gitignorefile müssen immer in neue Zeile und nicht in selbe Zeile hinter ein zu ignorierendes file!
