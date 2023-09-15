@@ -19,16 +19,16 @@ cd "${cleandata_w3}"
 use hhclean.dta, clear
 merge 1:1 QID using hhraw.dta, keepusing (__42030 __72201 __10024) keep (match master)
 rename (__42030 __72201 __10024) (_x42030 _x72201 _x10024)
+cap tostring prov distr subdistr vill, force replace
 save hhclean1, replace
 
 cd "${cleandata_w5}"
 use hhclean.dta, clear
-tostring QID, replace
 merge 1:1 QID using hhraw.dta, keepusing (__10024 __31013a __31013b __31014a __31014b __31019a __31019b __31020a __31020b __31024 __31025 __32024 __42030 __62001 __62013 __62020 __62021 __62022 __62023 __62024 __62025 __62026 __62027 __71133b __71133c) keep (match master)
 foreach root in 10024 31025 31013a 31013b 31014a 31014b 31019a 31019b 31020a 31020b 32024 31024 42030 62001 62013 62020 62021 62022 62023 62024 62025 62026 62027 71133b 71133c{
 	cap rename  __`root' _x`root'
 }
-destring QID, replace
+cap tostring prov distr subdistr vill, force replace
 save hhclean1, replace
 
 cd "${cleandata_w6}"
@@ -55,6 +55,7 @@ merge 1:1 QID using hhraw.dta, keepusing (__10024 __31013a __31013b __31014a __3
 foreach root in 10024 31013a 31013b 31014a 31014b 31019a 31019b 31020a 31020b 31024 31025 32024 62001 62013 62020 62021 62022 62023 62024 62025 62026 62027 71133b 71133c{
 	cap rename __`root' _x`root'
 }
+cap tostring _x10001 _x10002 _x10003 _x10004, force replace
 save hhclean1, replace
 
 cd "${cleandata_w7}"
@@ -80,9 +81,10 @@ use hhclean.dta, clear
 merge 1:m QID using mem_temp.dta, keepusing (T _x72201) keep (match master) nogen
 duplicates drop QID, force
 merge 1:1 QID using hhraw.dta, keepusing (__10024 __31013a __31013b __31014a __31014b __31019a __31019b __31020a __31020b __31024 __31025 __62001 __62013 __62020 __62021 __62022 __62023 __62024 __62025 __62026 __62027 __71133b __71133c)
-foreach root in 10024 31013a 31013b 31014a 31014b 31019a 31019b 31020a 31020b 31024 31025 62001 62013 62020 62021 62022 62023 62024 62025 62026 62027 71133b 71133c {
+foreach root in 10024 31013a 31013b 31014a 31014b 31019a 31019b 31020a 31020b 31024 31025 62001 62013 62020 62021 62022 62023 62024 62025 62026 62027 71133b 71133c{
 	cap rename __`root' _x`root'
 }
+cap tostring prov distr subdistr vill, force replace
 save hhclean1, replace
 
 //// wave 8
@@ -249,6 +251,7 @@ erase membersforHHmerging.dta
 erase invdetailforHHmerging.dta
 erase disinvdetailforHHmerging.dta
 erase financialinstitutionsforHHmerging.dta
+cap tostring v10001 v10002 v10003 v10004, force replace
 save TVSEP20191.dta, replace
 
 *****************************************************************************
@@ -312,7 +315,7 @@ replace _x41003=_x41003*6.25
 save landclean1.dta, replace
 
 //// wave 6 + 7
-// adding T to landclean. Somehow the HH-datasets don't contain the T dummy variable yet in the dropbox folder, so I'll still create it. by using hhclean which has T included.
+// adding T to landclean by using hhclean which has T included.
 foreach wave in w6 w7 {
 cd "${cleandata_`wave'}"
 use landclean.dta, clear
