@@ -13,10 +13,12 @@ macro drop _all
 
 global home "//tsclient/C/Users/Julian/Dropbox/Rice Long-term"
 
+
 global 	rawdata			"$home/0_Original_data" //store original data here
 global 	ado 			"$home/2_STATA/ado" //user-written ado's and self-written programs
 global 	data 			"$home/2_STATA/data" //whenever you save data, do it here
 global 	do 				"$home/2_STATA/do/_Julian neu" //all do-files go here, numbered in logical order
+
 global 	graph 			"$home/2_STATA/graph" //all graphs go here
 global 	output			"$home/2_STATA/output" //result tables, log files, etc.
 
@@ -37,6 +39,7 @@ global merge_w5 "$data/merge_w5"
 global merge_w6 "$data/merge_w6"
 global merge_w7 "$data/merge_w7"
 global merge_w8 "$data/merge_w8"
+
 
 *add to merge do:
 
@@ -119,7 +122,7 @@ cd "$do"
 do 2.3.0.ylists.do
 do 2.3.0.xlists.do
 
-//do 2.3.2.impute.do //make sure that all outcome vars and pscore vars are imputed
+//do 2.3.2.impute.do //make sure that all outcome vars and pscore vars are imputed. Put as a comment, because impute2 isn't working anymore. Replacement needs to be found
 
 
 
@@ -145,8 +148,8 @@ winsor2 `wave'income, c(0 99) replace
 *`wave'_x10081 `wave'_x10082 `wave'_x10083 `wave'_x10091 `wave'_x10092 `wave'_x10093 `wave'_x10094
 *lnskew0 transform?
 
-foreach wave in w1 w2 w3 w5 w6 w7 w8{
-foreach var in `wave'_x31005a `wave'_x10080 `wave'_x10081 `wave'_x10082 `wave'_x10083 `wave'_x10084 `wave'_x10085 `wave'_x10086 `wave'_x10087 `wave'_x10088 `wave'_x10091 `wave'_x10092 `wave'_x10093 `wave'_x10094 { 
+foreach wave in w1 w2 w3 w5 w6 w7 w8 {
+	foreach var in `wave'_x31005a `wave'_x10080 `wave'_x10081 `wave'_x10082 `wave'_x10083 `wave'_x10084 `wave'_x10085 `wave'_x10086 `wave'_x10087 `wave'_x10088 `wave'_x10091 `wave'_x10092 `wave'_x10093 `wave'_x10094 { 
 
 cap confirm variable `var'L 
 if !_rc {
