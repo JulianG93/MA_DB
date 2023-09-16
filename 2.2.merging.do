@@ -128,7 +128,6 @@ save hh_temp.dta, replace
 
 if "`wave'"=="w5"{ // Variables set as comments in the following lines don't exist for the respective waves
 	keep QID hhid prov distr subdistr  vill T   _x12122 _x12123 _x42030 _x32007 _x32010 _x32024 _x31013a 	_x31013b _x31014a _x31014b _x31019a _x31019b _x31020a _x31020b _x72201 n60borgov n60relfr _x31024
-	tostring distr subdistr vill, replace
 }
 if "`wave'"=="w2"{
 	keep QID hhid prov distr subdistr  vill T   _x12122 _x12123 _x42030 _x32007 _x32010 _x32024 _x31013a 	_x31013b _x31014a _x31014b _x31019a _x31019b _x31020a _x31020b _x72201 n60borgov n60relfr
@@ -144,7 +143,6 @@ if "`wave'"=="w6"{
 }
 if "`wave'"=="w7"{
 	keep QID hhid prov distr subdistr  vill T   _x12122 _x12123 /*_x42030 _x32007 _x32010 _x32024*/_x31013a _x31013b _x31014a _x31014b _x31019a _x31019b _x31020a _x31020b _x72201 /*n60borgov n60relfr*/
-	tostring distr subdistr vill, replace
 }
 if "`wave'"=="w8"{
 	keep QID /*hhid*/ prov distr subdistr  vill T /*_x12122*/ _x12123 /*_x42030 _x32007 _x32010 		 _x32024*/ _x31013a _x31013b _x31014a _x31014b _x31019a _x31019b _x31020a _x31020b _x72201 //n60borgov 	n60relfr // Variables set as comments don't exist
@@ -152,14 +150,9 @@ if "`wave'"=="w8"{
 
 cd "$data"
 save merge_`wave', replace
-}
 
-//This block somehow isn't working here so it was set as a comment and transferred two blocks further //(past "MERGE MEM DATA") where it's called "CREATE MASTER PART 2" and there it works just fine.
-/* foreach wave in w1 w2 w3 w5 w6 w7 w8 {
-	cd "$data"
-	use ${merge_`wave'}, clear
-	
 if "`wave'"=="w3" | "`wave'"=="w5" | "`wave'"=="w6" | "`wave'"=="w7" {
+
 	merge 1:1 QID using "${cleandata_`wave'}/hh_temp.dta", keepusing(_x62013 _x62001 _x62022 _x62024 _x62027 _x62020 _x62021 _x62023 _x62025 _x62026 ) nogen //not in 2007 and 2008. Variables that are set as a comment in the following blocks don't exist for the respective waves.
 	foreach var in _x62013 _x62001 _x62022 _x62024 _x62027 _x62020 _x62021 _x62023 _x62025 _x62026{
 		cap replace `var'=0 if `var'!=1 & `var'!=.
@@ -208,7 +201,10 @@ save merge_`wave', replace
 
 erase "${cleandata_`wave'}/hh_temp.dta"
 }
-*/
+erase "$cleandata_w8/TVSEP20191.dta"
+foreach wave in w2 w3 w5 w6 w7 {
+	erase "${cleandata_`wave'}/hhclean1.dta"
+}
 
 *
 
@@ -431,7 +427,8 @@ replace hhh5_better=1 if hhh5_better>1 // See previous explanations
 cd "${cleandata_`wave'}"
 save mem_temp, replace
 
-
+cd "$data"
+use merge_`wave', clear
 merge 1:1 QID using "${cleandata_`wave'}/mem_temp.dta"
 drop if _merge==2 
 drop _merge
@@ -498,7 +495,7 @@ cd "$data"
 save merge_`wave', replace
 
 
-/*if "`wave'"=="w8" {
+if "`wave'"=="w8" {
     cd "${cleandata_`wave'}"
 	erase members1.dta
     erase members2.dta
@@ -506,73 +503,11 @@ save merge_`wave', replace
 else {
 	cd "${cleandata_`wave'}"
 	erase memclean1.dta
-} */
+}
 }
 
 *
 *****************************************************************************
-
-** CREATE MASTER PART 2 **
-** Somehow this block just doesn't work when used in the first block of CREATE MASTER. Therefore it was put here.
-
-foreach wave in w1 w2 w3 w5 w6 w7 w8 {
-	cd "$data"
-	use merge_`wave', clear
-	
-if "`wave'"=="w3" | "`wave'"=="w5" | "`wave'"=="w6" | "`wave'"=="w7" {
-	merge 1:1 QID using "${cleandata_`wave'}/hh_temp.dta", keepusing(_x62013 _x62001 _x62022 _x62024 _x62027 _x62020 _x62021 _x62023 _x62025 _x62026 ) nogen //not in 2007 and 2008. Variables that are set as a comment in the following blocks don't exist for the respective waves.
-	foreach var in _x62013 _x62001 _x62022 _x62024 _x62027 _x62020 _x62021 _x62023 _x62025 _x62026{
-		cap replace `var'=0 if `var'!=1 & `var'!=.
-	}
-}
-
-if "`wave'"=="w8" {
-
-	merge 1:1 QID using "${cleandata_`wave'}/hh_temp.dta", keepusing(_x62013 _x62001 _x62022 _x62024 /* _x62027*/ _x62020 _x62021 _x62023 _x62025 /*_x62026*/ ) nogen //not in 2007 and 2008. Variables that are set as a comment aren't available in the respective waves.
-	foreach var in _x62013 _x62001 _x62022 _x62024 /*_x62027*/ _x62020 _x62021 _x62023 _x62025 /*_x62026*/{
-		cap replace `var'=0 if `var'!=1 & `var'!=. // Creating an extra loop for wave 8, because variables 62026 (What do you plan in regard of the time used for agricultural production?) and 62027 (What do you plan in regard of the labor hired in?) don't exist for wave 8.
-	}
-	label var _x62013 "Divestments last 5 years"
-	label var _x62001 "Investment last 5 years"
-}
-
-if "`wave'"=="w1" {
-
-	merge 1:1 QID using "${cleandata_`wave'}/hh_temp.dta", keepusing(_x12122 _x12123 /*_x10024 _x31024 _x31025 _x71133b _x71133c _x31013a*/ _x31013b /*_x31014a*/ _x31014b /*_x31019a _x31019b _x31020a _x31020b*/ _x72201 n60borgov n60relfr _x32010 _x42030 _x32007 /*_x32024*/) nogen //not in 2007.
-}
-
-if "`wave'"=="w2" | "`wave'"=="w3" | "`wave'"=="w5" {
-
-	merge 1:1 QID using "${cleandata_`wave'}/hh_temp.dta", keepusing(_x12122 _x12123 _x10024 _x31024 _x31025 _x71133b _x71133c _x31013a _x31013b _x31014a _x31014b _x31019a _x31019b _x31020a _x31020b _x72201 n60borgov n60relfr _x32010 _x42030 _x32007 _x32024) nogen //not in 2007
-	label var _x32024 "Do you think the climate changed over time?"
-}
-
-if "`wave'"=="w6" {
-	merge 1:1 QID using "${cleandata_`wave'}/hh_temp.dta", keepusing(/*_x12122 _x12123*/ _x10024 _x31024 _x31025 _x71133b _x71133c _x31013a _x31013b _x31014a _x31014b _x31019a _x31019b _x31020a _x31020b _x72201 /*n60borgov n60relfr _x32010*/ _x42030 /*_x32007*/ _x32024) nogen //not in 2007
-	label var _x32024 "Do you think the climate changed over time?"
-}
-
-
-
-if "`wave'"=="w7" {
-	merge 1:1 QID using "${cleandata_`wave'}/hh_temp.dta", keepusing(/*_x12122 _x12123*/ _x10024 _x31024 _x31025 _x71133b _x71133c _x31013a _x31013b _x31014a _x31014b _x31019a _x31019b _x31020a _x31020b _x72201 /*n60borgov n60relfr _x32010 _x42030 _x32007 32024*/) nogen //not in 2007.
-}
-
-if "`wave'"=="w8" {
-	merge 1:1 QID using "${cleandata_`wave'}/hh_temp.dta", keepusing(/*_x12122*/ _x12123 /*_x10024*/ _x31024 _x31025 _x71133b _x71133c _x31013a _x31013b _x31014a _x31014b _x31019a _x31019b _x31020a _x31020b _x72201 /*n60borgov n60relfr _x32010*/) nogen
-	label var _x31025 "won in lottery how much would invest?"
-}
-
-cd "$data"
-save merge_`wave', replace
-
-erase "${cleandata_`wave'}/hh_temp.dta"
-
-/* if "`wave'"=="w5" {
-    cd "${cleandata_`wave'}"
-    copy hh_temp hh_temp1.dta, replace
-	} */
-}
 
 ** MERGE SHOCKS **
 
@@ -2843,9 +2778,8 @@ if "`wave'"=="w8" {
 // No other waves can be integrated as this dataset only exists in wave 5 and doesn't apply to any other waves.
 
 // cd "/Users/`c(username)'/Dropbox/Research/DFG_FOR576/2. Original Data/Thai HH Survey 2013/4. Data clean/w5_v2/" <- This filepath doesn't work
-// use rinsur_withmissing.dta, clear <- Doesn't exist
 cd "$cleandata_w5"
-use rinsur_withmissing.dta, replace // Using rinsurclean, because the rinsur_withmissing dataset doesn't exist.
+use rinsur_withmissing.dta, replace
 
 *cd "$cleandata_w5"
 *use rinsur.dta, clear
@@ -2917,7 +2851,7 @@ save rinsur_temp, replace
 
 cd "$data"
 use merge_w5, clear
-merge 1:1 QID using "$cleandata_w5/rinsur_temp.dta"
+merge 1:1 QID using "$cleandata_w5/rinsur_temp.dta", force
 drop if _merge==2 
 drop _merge
 erase "$cleandata_w5/rinsur_temp.dta"
@@ -2932,72 +2866,10 @@ save merge_w5, replace
 *****************************************************************************
 *** SECTION 2.2d - CREATE PANEL  ********************************************
 
-cd "$data" // At first, for all waves the variables QID, T, hhid, prov, distr, subdistr and vill need to be added to the 'merge_`wave'' datasets by merging with the hh-clean datasets.
-use merge_w1, clear
-merge 1:1 QID using "$cleandata_w1/hhclean.dta", keepusing (T hhid _x10001 _x10002 _x10003 _x10004) nogen
-cap rename (_x10001 _x10002 _x10003 _x10004) (prov distr subdistr vill)
-save merge_w1, replace
-
-cd "$data"
-use merge_w2, clear
-merge 1:1 QID using "$cleandata_w2/hhclean1.dta", keepusing (T hhid prov distr subdistr vill _x31024) nogen
-save merge_w2, replace
-
-cd "$data"
-use merge_w3, clear
-//destring distr subdistr vill, replace
-merge 1:1 QID using "$cleandata_w3/hhclean1.dta", keepusing (T hhid prov distr subdistr vill _x31024) nogen 
-tostring distr subdistr vill, replace
-save merge_w3, replace
-
-cd "$cleandata_w5"
-use hhclean1.dta, clear
-destring prov, replace
-save hh_temp, replace
-cd "$data"
-use merge_w5, clear
-destring QID, replace
-merge 1:1 QID using "$cleandata_w5/hh_temp.dta", keepusing (T hhid prov vill distr subdistr _x31024) nogen
-save merge_w5, replace
-erase "$cleandata_w5/hh_temp.dta"
-
-cd "$data"
-use merge_w6, clear
-merge 1:1 QID using "$cleandata_w6/hhclean1.dta", keepusing (T hhid prov vill distr subdistr _x31024) nogen
-tostring vill distr subdistr, replace
-save merge_w6, replace
-
-cd "$data"
-use merge_w7, clear
-merge 1:1 QID using "$cleandata_w7/hhclean1.dta", keepusing (T hhid prov vill distr subdistr _x31024) nogen
-save merge_w7, replace
-
-cd "$cleandata_w8"
-use TVSEP20191.dta // Using TVSEP20191, because it contains T. Wave 8 doesn't contain a HH dataset, but can be replaced by TVSEP2019 as it contains all needed variables (prov, vill, distr and subdistr).
-tostring QID, replace
-tostring v10002 v10003 v10004, gen(distr subdistr vill)
-cap rename v10001 prov
-save hh_temp, replace
-cd "$data"
-use merge_w8, clear
-merge 1:1 QID using "$cleandata_w8/hh_temp.dta", keepusing (T prov vill distr subdistr _x31024) nogen //hhid isn't available in wave 8, so I deleted it frop keepusing
-save merge_w8, replace
-//erase "$cleandata_w8/hh_temp.dta"
-//erase "$cleandata_w8/TVSEP20191.dta"
-
-/*foreach wave in w2 w3 w5 w6 w7 {
-	erase "${cleandata_`wave'}/hhclean1.dta"
-	erase "${cleandata_`wave'}/hh_temp.dta"
-} */
-
 foreach wave in w1 w2 w3 w5 w6 w7 w8{
 
 cd "$data"
 use merge_`wave'
-
-if "wave"=="w3" {
-	tostring distr, replace
-}
 
 ** CORRECT VAR NAMES **
 foreach var of varlist * {
@@ -3027,18 +2899,21 @@ save merge_`wave', replace
 
 
 ** MERGE WAVES **
+foreach wave in w3 w5 w6 {
+
+cd "$data"
+use merge_`wave'
+cap tostring distr subdistr vill, force replace
+save merge_`wave', replace
+}
+
 cd "$data"
 use merge_w2, clear
-//destring distr subdistr vill, replace
 //label values distr distr
 merge 1:1 QID hhid using "merge_w3", nogen
-destring QID distr subdistr vill, replace
 merge 1:1 QID hhid using "merge_w5", nogen
-tostring QID distr subdistr vill, replace
 merge 1:1 QID hhid using "merge_w6", nogen
-destring distr subdistr vill, replace
 merge 1:1 QID hhid using "merge_w7", nogen
-tostring distr subdistr vill, replace
 merge 1:1 QID      using "merge_w8", keep (match master) nogen // w8 doesn't contain the hhid variable, so I'm not using it. QID alone is enough though, because it's a unique identifier. Has unmatched observations from merge_w8 (using dataset) which need to be dropped (keep (match master)). Otherwise there will be an error message following when trying to merge merge_w1 stating that hhid doesn't uniquely identify observations.
 merge 1:1 QID hhid using "merge_w1"
 
@@ -3236,7 +3111,7 @@ label values subdistr subdistr
 
 cd "$data"
 saveold dataset_v1, replace
-/*
+
 erase merge_w1.dta
 erase merge_w2.dta
 erase merge_w3.dta
@@ -3244,7 +3119,7 @@ erase merge_w5.dta
 erase merge_w6.dta
 erase merge_w7.dta
 erase merge_w8.dta
-*/
+
 // Deleting leftover temporary files that aren't needed anymore
 
 
