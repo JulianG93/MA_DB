@@ -40,7 +40,7 @@ global merge_w6 "$data/merge_w6"
 global merge_w7 "$data/merge_w7"
 global merge_w8 "$data/merge_w8"
 
-
+// global dataset_v2 "$home/2_STATA/data/dataset_v2"
 *add to merge do:
 
 * varnames cannot be more than 9 characters long
@@ -213,7 +213,6 @@ gen w8n60relfr=.
 
 keep $ylistw5 $ylistw3 $ylistw2 $ylistw6 $ylistw7 $ylistw8 $noimpute_ylistw5 $noimpute_ylistw3 $noimpute_ylistw2 $noimpute_ylistw6 $noimpute_ylistw7 $noimpute_ylistw8 $xlist $xlist_balance $treatment w5whynotreg09 QID T hhid prov vill *_x1008* *_x1009* 
 
-global dataset_v2 "$home/2_STATA/data/dataset_v2"
   
 cd "$data"
 save dataset_v2, replace
