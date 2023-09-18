@@ -14,6 +14,7 @@ clear
 version 16.1
 macro drop _all
 set maxvar 32767 // Setting the maximum amount of variables of STATA SE
+set scrollbufsize 2000000 // increase the amount of result in the output window to 2 million bytes
 
 ** CREATING GLOBAL FOR PRESENT WORKING DIRECTORY **
 *To use this file, put a "1" behind your name and a "0" behind all other names:
