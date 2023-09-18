@@ -2129,7 +2129,7 @@ label var _x60040hrsm  "Total hours HH spend on self-farm employment activities"
 label var _x10088new  "Total self-employ income"
 
 if "`wave'"=="w1"{
-drop _x60040hrsm _x10088new
+drop _x60040hrsm // _x10088new The variables for 10088 are available for wave 1 and have the same definition so I don't see a reason, why the variable should be deleted. Only the variables for _x60040hrsm are correctly stated as missing.
 }
 
 cd "$data"
