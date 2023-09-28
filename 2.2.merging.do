@@ -12,8 +12,10 @@ clear
 // do 2.1.settings.do Add 09.11.: Not needed as the settings are in the master.do-file                 
 
 sysdir set PLUS "$data" // Changing the package installation path, because I don't have access to the default installation path, when using stata remotely
-ssc install fre, replace
-ssc install winsor2, replace
+cap which fre
+if _rc ssc install fre
+cap which winsor2
+if _rc ssc install winsor2
 
 *****************************************************************************
 *** SECTION 2.2a - 2013 MERGING  ********************************************
@@ -498,7 +500,6 @@ save merge_`wave', replace
 if "`wave'"=="w8" {
     cd "${cleandata_`wave'}"
 	erase members1.dta
-    erase members2.dta
 }
 else {
 	cd "${cleandata_`wave'}"
@@ -924,7 +925,9 @@ if "`wave'"=="w1"{
 	}
 	cap rename _x42003a _x42002 // In wave 1 the variable 42003a has the definition of variable 42002 in the following waves.
 	replace _x42002=101 if _x42002==11 // In wave 1 there's only 'fragrant rice' (11) instead of 101 as in the following waves. While it's not a perfect substitute, 'fragrant rice' almost always equals 'jasmine rice' in the following waves.
+	replace _x42002=103 if _x42002==13 // In wave 1 'glutinous rice' is 13 instead of 103 as in the following waves.
 	replace _x42002=104 if _x42002==12 // In wave 1 'non-glutionous rice' is 12 instead of 104 as in the following waves.
+	// 102 ('other fragrant rice') doesn't exist for wave 1
 }
 else if "`wave'"=="w6" | "`wave'"=="w7" {
 	 use "${cleandata_`wave'}/cropsclean1", replace // Using cropsclean1, because T has been added.
@@ -1008,7 +1011,8 @@ erase crops_temp.dta
 //drop if not rice cassava corn crops
 recode _x42002 (101/104=1), gen(insurcrops)
 keep if insurcrops==1 
- 
+
+
 //unit transformation
 gen unit=.
 replace unit = 1000 if _x42009==1
@@ -1284,6 +1288,7 @@ if "`wave'"=="w1"{
 	drop _x42002
 	cap rename _x42003a _x42002 // In wave 1 the variable 42003a has the definition of variable 42002 in the following waves.
 	replace _x42002=101 if _x42002==11 // In wave 1 there's only 'fragrant rice' (11) instead of 101 as in the following waves. While it's not a perfect substitute, 'fragrant rice' almost always equals 'jasmine rice' in the following waves.
+	replace _x42002=103 if _x42002==13 // In wave 1 'glutinous rice' is 13 instead of 103 as in the following waves.
 	replace _x42002=104 if _x42002==12 // In wave 1 'non-glutionous rice' is 12 instead of 104 as in the following waves.
 	foreach root in 42014 42016 42018 42019 42020 42021 42022 42023 42024 42025 42026 42027 42028 42029 42029a {
 		replace _x`root'=. if _x`root'==97 // Replacing 97 with missing values as they are used as a label for 'Don't know'.
@@ -1466,13 +1471,14 @@ save merge_`wave', replace
 ***#######################THIS MIGHT BE FLAWED################################################
 ** MERGE MORE CROP DATA **
 
-foreach wave in w1 w2 w3 w5 w6 w7 w8{
+foreach wave in w1 w2 w3 w5 w6 w7 w8 {
 
 if "`wave'"=="w1"{
 	use "${cleandata_w1}/cropsclean", replace
 	drop _x42002
 	rename _x42003a _x42002 // In wave 1 the variable 42003a has the definition of variable 42002 in the following waves.
 	replace _x42002=101 if _x42002==11 // In wave 1 there's only 'fragrant rice' (11) instead of 101 as in the following waves. While it's not a perfect substitute, 'fragrant rice' almost always equals 'jasmine rice' in the following waves.
+	replace _x42002=103 if _x42002==13 // In wave 1 'glutinous rice' is 13 instead of 103 as in the following waves.
 	replace _x42002=104 if _x42002==12 // In wave 1 'non-glutionous rice' is 12 instead of 104 as in the following waves.
 	foreach root in 42014 42016 42018 42019 42020 42021 42022 42023 42024 42025 42026 42027 42028 42029 42029a  {
 		replace _x`root'=. if _x`root'==97 // Replacing 97 with missing values as they are used as a label for 'Don't know'.
