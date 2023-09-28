@@ -8,7 +8,8 @@ unab varlist: w1* w2* // wave 1 and 2 are used
 local dataset "$dataset_v2"
 
 sysdir set PLUS "$data" // Changing the package installation path, because I don't have access to the default installation path, when using stata remotely
-ssc install descsave, replace // Installing the needed packages
+cap which descsave
+if _rc ssc install descsave
 *****************************************************************************
 
 //count relevant first order variables
@@ -38,7 +39,6 @@ save "`dataset'", replace
 keep QU*
 quiet describe 
 
-//ssc install descsave
 descsave *, saving("$data/QUvarnames.dta", replace) //export second order varlist ...
 use "$data/QUvarnames.dta", clear //...and open it as .dta file
 keep name order 
