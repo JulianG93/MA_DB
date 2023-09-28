@@ -4,7 +4,7 @@
 ** CREATE MASTER**
 
 //// waves 2,3,5,6,7
-// Adding several variable to the hhclean datasets from the hhraw datasets which are somehow missing in the hhclean datasets. Adding T to waves 6 + 7
+// Adding several variable to the hhclean datasets from the hhraw datasets which are somehow missing in the hhclean datasets. Adding T to waves 6 + 7 and 72201 (Does member own a free health card?) to wave 8.
 
 cd "${cleandata_w2}"
 use hhclean.dta, clear
@@ -24,66 +24,31 @@ save hhclean1, replace
 
 cd "${cleandata_w5}"
 use hhclean.dta, clear
-merge 1:1 QID using hhraw.dta, keepusing (__10024 __31013a __31013b __31014a __31014b __31019a __31019b __31020a __31020b __31024 __31025 __32024 __42030 __62001 __62013 __62020 __62021 __62022 __62023 __62024 __62025 __62026 __62027 __71133b __71133c) keep (match master)
-foreach root in 10024 31025 31013a 31013b 31014a 31014b 31019a 31019b 31020a 31020b 32024 31024 42030 62001 62013 62020 62021 62022 62023 62024 62025 62026 62027 71133b 71133c{
+merge 1:1 QID using hhraw.dta, keepusing (__10024 __42030) keep (match master)
+foreach root in 10024 42030 {
 	cap rename  __`root' _x`root'
 }
 cap tostring prov distr subdistr vill, force replace
 save hhclean1, replace
 
 cd "${cleandata_w6}"
-use memclean.dta, clear
-// This block prepares observations of households that have no HH-head to be given a Thai Dummy variable (T) in the next block. I consider a HH Thai if the HH-head is Thai. In the relatively rare cases that no HH-Head is given I consider a HH Thai if all other members of the HH are Thai. In this block I create a variable diff, which is 1 if all members of a HH (that has no HH-head) are Thai.
-bysort QID: gen hhhhead = _x21005==1 // hhhhead is 1, if HH-member is HH-head (_x21005==1)
-bysort QID: egen hhhhead1 = max(hhhhead) // hhhhead1 is 1, if HH has a HH-Head
-drop if hhhhead1==0 & _x21011==. // Drop observations of households that have no HH-Head and missing values for variable 21011 (ethnic group), because they can't be used to build the Thai-Dummy 
-by QID (_x21011), sort: gen diff = _x21011[1] == _x21011[_N] // diff is 1 if all members of a HH have the same ethnic group
-replace diff=. if hhhhead1==1 // diff is replaced with missing values for households that have a HH-head, because their Thai-Dummy variable will be created in the next block.
-replace _x21005=1 if diff==1 // If HH has no HH-head to evaluate their status, but all HH members are Thai (diff==1) they will be set as HH-heads (21005=1), which will be used in the next block to create the Thai dummy.
-// In This block observations of both households with and without HH-heads are given the Thai Dummy (T).
-drop if _x21005!=1 // drop all household members except the HH head, which is used to evaluate whether a household is Thai or not
-duplicates tag QID, gen(dup_id) // Creates a variable dup_id that is >0 if there are several household heads given for one household
-drop if dup_id>0 & _x21011!=3 // If there are several household heads in one household (dup_id>0) and if they're not Thai (_x21011!=3) they'll be dropped.
-cap gen T= _x21011
-replace T=0 if _x21011!=. & _x21011!=3
-replace T=1 if _x21011==3 // Thai Dummy is created (_x21011=3 equals Thai)
-save mem_temp.dta, replace
 use hhclean.dta, clear
-merge 1:m QID using mem_temp.dta, keepusing (T) keep (match master) nogen
-duplicates drop //There are duplicates if in the memraw dataset there were several Thai household heads. These can just be dropped and the changed hh dataset (which will be saved as hhclean1) will have the same amount of observations again as the original hhraw dataset.
-merge 1:1 QID using hhraw.dta, keepusing (__10024 __31013a __31013b __31014a __31014b __31019a __31019b __31020a __31020b __31024 __31025 __32024 __62001 __62013 __62020 __62021 __62022 __62023 __62024 __62025 __62026 __62027 __71133b __71133c)
-foreach root in 10024 31013a 31013b 31014a 31014b 31019a 31019b 31020a 31020b 31024 31025 32024 62001 62013 62020 62021 62022 62023 62024 62025 62026 62027 71133b 71133c{
-	cap rename __`root' _x`root'
-}
+merge 1:1 QID using "${cleandata_w2}/hhclean.dta", keepusing (T) keep (match master) nogen
 cap tostring _x10001 _x10002 _x10003 _x10004, force replace
 save hhclean1, replace
 
 cd "${cleandata_w7}"
 use memclean.dta, clear
-bysort QID: gen hhhhead = _x21005==1 
-bysort QID: egen hhhhead1 = max(hhhhead)
-drop if hhhhead1==0 & _x21011==.
-by QID (_x21011), sort: gen diff = _x21011[1] == _x21011[_N]
-replace diff=. if hhhhead1==1
-replace _x21005=1 if diff==1
-drop if _x21005!=1
-duplicates tag QID, gen(dup_id)
-drop if dup_id>0 & _x21011!=3
-cap gen T= _x21011
-replace T=0 if _x21011!=. & _x21011!=3
-replace T=1 if _x21011==3
 by QID (_x23002a), sort: gen diff1 = _x23002a[1] == _x23002a[_N] // If not all members of the HH have a free health card, the HH will be considered as not having a free health card. In that case diff1 will be zero and _x23002a will be set as 0.
 replace _x23002a=1 if diff1==1 & _x23002a==1
 replace _x23002a=0 if diff1==0
-rename _x23002a _x72201 // renaming the health card dummy variable to the variable name that is used in w1-w6
+collapse (mean) _x23002a, by(QID)
 save mem_temp.dta, replace
 use hhclean.dta, clear
-merge 1:m QID using mem_temp.dta, keepusing (T _x72201) keep (match master) nogen
-duplicates drop QID, force
-merge 1:1 QID using hhraw.dta, keepusing (__10024 __31013a __31013b __31014a __31014b __31019a __31019b __31020a __31020b __31024 __31025 __62001 __62013 __62020 __62021 __62022 __62023 __62024 __62025 __62026 __62027 __71133b __71133c)
-foreach root in 10024 31013a 31013b 31014a 31014b 31019a 31019b 31020a 31020b 31024 31025 62001 62013 62020 62021 62022 62023 62024 62025 62026 62027 71133b 71133c{
-	cap rename __`root' _x`root'
-}
+merge 1:1 QID using "${cleandata_w2}/hhclean.dta", keepusing (T) keep (match master) nogen
+merge 1:1 QID using mem_temp.dta, keepusing (_x23002a) keep (match master) nogen
+rename _x23002a _x72201
+label variable _x72201 "Do the members of the HH own a free health card?"
 cap tostring prov distr subdistr vill, force replace
 save hhclean1, replace
 
@@ -216,28 +181,12 @@ label values v21014 v21014a // Applying the value labels v21014a (which have the
 merge m:1 interview__key using TVSEP2019.dta, keepusing (QID) keep (match master) nogen
 save members1.dta, replace
 
-// The Thai Dummy also needs to be added to the HH dataset (which is called TVSEP2019 for wave 8). As this dataset doesn't regard wether single members are Thai, but if the HH is thai, a Thai-Dummy for the whole household is needed and created herer, so that later this Thai Dummy can be merged with the TVSEP2019 dataset. This block prepares observations of households that have no HH-head to be given a Thai Dummy variable (T). I consider a HH Thai if the HH-head is Thai. In these relatively rare cases that no HH-Head is given I consider a HH Thai if all other members of the HH are Thai. In this block I create a variable diff, which is 1 if all members of a HH (that have no HH-head) are Thai. This variable will be used to set the whole household as Thai.
-replace T=0 // The old Thai-Dummy which was valid for every member is set to zero again, so that it can be replaced with the values for the whole household.
-bysort QID: gen hhhhead = v21005==1 // hhhhead is 1, if HH-member is HH-head (_x21005==1)
-bysort QID: egen hhhhead1 = max(hhhhead) // hhhhead1 is 1, if HH has a HH-Head
-drop if hhhhead1==0 & v21011==. // Drop observations of households that have no HH-Head and missing values for variable 21011 (ethnic group), because they can't be used to build the Thai-Dummy
-by QID (v21011), sort: gen diff = v21011[1] == v21011[_N] // diff is 1 if all members of a HH have the same ethnic group
-replace diff=. if hhhhead1==1 // diff is replaced with missing values for households that have a HH-head, because their Thai-Dummy variable will be created in the next block.
-replace v21005=1 if diff==1 // If HH has no HH-head to evaluate their status, but all HH members are Thai (diff==1) they will be set as HH-heads (21005=1), which will be used in the next block to create the Thai dummy.
-
-// In this block observations of both households with and without HH-heads are given the Thai Dummy (T).
-drop if v21005!=1 // drop all household members except the HH head, which is used to evaluate whether a household is Thai or not
-duplicates tag QID, gen(dup_id) // Creates a variable dup_id that is >0 if there are several household heads given for one household or if there's a HH that in the previous block became "all Thai".
-drop if dup_id>0 & v21011!=3 // If there are several household heads in one household (dup_id>0) and if they're not Thai (v21011!=3) they'll be dropped.
-replace T=0 if v21011!=. & v21011!=3
-replace T=1 if v21011==3
-drop if dup_id>0 // There are still duplicate observations which stem from the previous block and need to be deleted, because otherwise there would be an error in the next block.
-save members2.dta, replace
-
-// T is added to TVSEP2019 by merging with members2.
+// T is added to TVSEP2019 by merging with hhclean from wave 2.
 cd "${cleandata_w8}"
 use TVSEP2019.dta, clear
-merge 1:m interview__key using members2.dta, keepusing (T) keep (match master) nogen
+tostring QID, replace // Just to be able to merge in the next line
+merge 1:1 QID using "${cleandata_w2}/hhclean.dta", keepusing (T) keep (match master) nogen
+destring QID, replace // Reversing QID again to old form
 rename (v31313a v31313b v31314a v31314b v31319a v31319b v31320a v31320b v62020 v62021 v62022 v62023 v62024 v62025 v31324 v31325) (_x31013a _x31013b _x31014a _x31014b _x31019a _x31019b _x31020a _x31020b _x62020 _x62021 _x62022 _x62023 _x62024 _x62025 _x31024 _x31025)
 merge m:1 interview__key using membersforHHmerging.dta, keepusing (v23002a) keep (match master) nogen
 merge m:1 interview__key using invdetailforHHmerging.dta, keepusing (v62007D1) keep (match master) nogen
@@ -290,8 +239,8 @@ save risks1.dta, replace
 
 ** MERGE LAND DATA **
 
-//// wave 1 + 2
-// Multiplying variable 41003 (land area) with 6.25. This was already done for variable 42005 (area planted), but not yet for variable 41003. In the clean datasets for waves 3 + 5 variable 41003 also needs to be multiplied by 6.25 (in the raw datasets, this seems to have been done already, but they're not used.)
+//// wave 1 + 2 + 3 + 5
+// Multiplying variable 41003 (land area) with 6.25 for waves 3-5. This was already done for variable 42005 (area planted) in the crops datasets (for waves 3-8), but not yet for variable 41003 in the land datasets. Also adding 41002 (Land parcel number) to the landclean dataset of wave 3, because it's only available in the raw dataset.
 cd "${cleandata_w1}"
 use landclean.dta, clear
 replace _x41003=_x41003*6.25
@@ -302,6 +251,7 @@ use landclean.dta, clear
 replace _x41003=_x41003*6.25
 save landclean1.dta, replace
 
+// wave 3: Adding 41002 (land parcel nr.) from the raw dataset.
 cd "${cleandata_w3}"
 use landclean.dta, clear
 replace _x41003=_x41003*6.25
@@ -319,16 +269,18 @@ save landclean1.dta, replace
 foreach wave in w6 w7 {
 cd "${cleandata_`wave'}"
 use landclean.dta, clear
-merge m:1 QID using hhclean1.dta, keepusing (T) keep (match master) 
+merge m:1 QID using "${cleandata_w2}/hhclean.dta", keepusing (T) keep (match master) nogen
 save landclean1, replace
 }
 
 //// wave 8
-// QID still has to be added by merging with TVSEP2019.dta and T-Dummy by merging with members2.dta.
+// QID still has to be added by merging with TVSEP2019.dta and T-Dummy by merging with hhclean.dta from wave 2.
 cd "${cleandata_w8}"
 use land_used.dta, clear
-merge m:1 interview__key using TVSEP20191.dta, keepusing (QID T) keep (match master) nogen
-save land_used1.dta, replace
+merge m:1 interview__key using "${cleandata_w8}/TVSEP2019.dta", keepusing (QID) keep (match master) nogen
+tostring QID, replace // Just to be able to merge in the next line
+merge m:1 QID using "${cleandata_w2}/hhclean.dta", keepusing (T) keep (match master) nogen
+save land_used1, replace
 
 ****************************************************************************
 
@@ -355,8 +307,11 @@ foreach root in 41008a {
 foreach wave in w6 w7 {
 cd "${cleandata_`wave'}"
 use cropsclean.dta, clear
-merge m:1 QID using hhclean1.dta, keepusing (T) keep (match master)
-// The variable 42002 ('crop') of waves 1-5 is variable 42003a (variety) in waves 6-8. Non-glutinous rice has become 12 instead of 104.
+merge m:1 QID using "${cleandata_w2}/hhclean.dta", keepusing (T) keep (match master) nogen
+// The variable 42002 ('crop') of waves 1-5 is variable 42003a (variety) in waves 6-8. Glutinous rice is 13 instead of 103.
+replace _x42003a=103 if _x42003a==13
+label define _x42003a 103 "glutinous rice", add
+// Non-glutinous rice is 12 instead of 104.
 replace _x42003a=104 if _x42003a==12 
 label define _x42003a 104 "non-glutinous rice", add
 label value _x42003a _x42003a
@@ -371,6 +326,8 @@ save cropsclean1, replace
 cd "${cleandata_w8}"
 use crops_plots.dta, clear
 merge m:1 interview__key using TVSEP20191.dta, keepusing (QID T) keep (match master) nogen
+replace v42003a=103 if v42003a==13 // The definition for 'glutinous rice' has changed in w8 and is 13 instead of 103 now, so it needs to be reversed back.
+label define v42003a 103 "glutinous rice", add
 replace v42003a=104 if v42003a==12 // The definition for 'non-glutinous rice' has changed in w8 and is 12 instead of 104 now, so it needs to be reversed back.
 label define v42003a 104 "non-glutinous rice", add
 label value v42003a v42003a
@@ -543,35 +500,16 @@ save asset_detail1.dta, replace
 ** MERGE INVESTMENT DATA **
 
 //// wave 6 + 7
-// adding T to investclean
+// adding T to investclean by merging with the hhclean dataset from wave 2.
 foreach wave in w6 w7 {
 cd "${cleandata_`wave'}"
-use memclean.dta, clear
-// This block prepares observations of households that have no HH-head to be given a Thai Dummy variable (T) in the next block. I consider a HH Thai if the HH-head is Thai. In the relatively rare cases that no HH-Head is given I consider a HH Thai if all other members of the HH are Thai. In this block I create a variable diff, which is 1 if all members of a HH (that has no HH-head) are Thai.
-bysort QID: gen hhhhead = _x21005==1 // hhhhead is 1, if HH-member is HH-head (_x21005==1)
-bysort QID: egen hhhhead1 = max(hhhhead) // hhhhead1 is 1, if HH has a HH-Head
-drop if hhhhead1==0 & _x21011==. // Drop observations of households that have no HH-Head and missing values for variable 21022 (ethnic group), because they can't be used to build the Thai-Dummy
-by QID (_x21011), sort: gen diff = _x21011[1] == _x21011[_N] // diff is 1 if all members of a HH have the same ethnic group
-replace diff=. if hhhhead1==1 // diff is replaced with missing values for households that have a HH-head, because their Thai-Dummy variable will be created in the next block.
-replace _x21005=1 if diff==1 // If HH has no HH-head to evaluate their status, but all HH members are Thai (diff==1) they will be set as HH-heads (21005=1), which will be used in the next block to create the Thai dummy.
-
-// In This block observations of both households with and without HH-heads are given the Thai Dummy (T).
-drop if _x21005!=1 // drop all household members except the HH head, which is used to evaluate whether a household is Thai or not
-duplicates tag QID, gen(dup_id) // Creates a variable dup_id that is >0 if there are several household heads given for one household
-drop if dup_id>0 & _x21011!=3 // If there are several household heads in one household (dup_id>0) and if they're not Thai (_x21011!=3) they'll be dropped
-cap gen T= _x21011
-replace T=0 if _x21011!=. & _x21011!=3
-replace T=1 if _x21011==3 // Thai Dummy is created (_x21011=3 equals Thai)
-save mem_temp.dta, replace
 use investclean.dta, clear
-merge m:m QID using mem_temp.dta, keepusing (T) keep (match master) // Instead of as for the hh dataset with a 1:m merge, I need to use a m:m merge, because the QID isn't a unique identifier in investclean. The m:m merge shouldn't be a problem though as T is the same for every QID as it's linked to the household head and if there are more than one household head the one's not being Thais were dropped.
-duplicates drop //There are duplicates if in the memclean dataset there were several Thai household heads. These can just be dropped and the changed investclean dataset (which will be saved as investclean1) will have the same amount of observations again as the original investclean dataset.
+merge m:1 QID using "${cleandata_w2}/hhclean.dta", keepusing (T) keep (match master) nogen 
 save investclean1.dta, replace
-erase mem_temp.dta
 }
 
 //// wave 8
-// T and Q still have to be added by merging with TVSEP2019.dta and variable 62006a (year) has to be corrected.
+// Q still has to be added by merging with TVSEP2019.dta, T has to be added by merging with hhclean.dta from wave 2 and variable 62006a (year) has to be corrected.
 cd "${cleandata_w8}"
 use invdetail, clear
 foreach root in 62006a {
@@ -580,7 +518,10 @@ foreach root in 62006a {
 	replace v`root'=2561-543 if v`root'==5 // 5 is used as a label for buddhist year 2561
 	replace v`root'=2562-543 if v`root'==6 // 6 is used as a label for buddhist year 2562
 }
-merge m:1 interview__key using TVSEP20191.dta, keepusing (T QID) keep (match master) nogen
+merge m:1 interview__key using TVSEP2019.dta, keepusing (QID) keep (match master) nogen
+tostring QID, replace // Just for merging in the next line
+merge m:1 QID using "${cleandata_w2}/hhclean.dta", keepusing (T) keep (match master) nogen
+destring QID, replace
 save invdetail1.dta, replace
 
 //disinvestment
@@ -728,26 +669,24 @@ save hhInc2clean1.dta, replace
 erase transfcleanfor1.dta
 
 //// wave 6
-// T has to be added by merging with hhclean1.dta. _x10093 needs to be replaced as it's corrupted. Preparations for this were done in the "MERGE INCOME DATA" block.
+// T has to be added by merging with hhclean.dta from wave 2. _x10093 needs to be replaced as it's corrupted. Preparations for this were done in the "MERGE INCOME DATA" block.
 cd "${cleandata_w6}"
 use hhincclean.dta, clear
 drop _x10093
 gen _x10101 = _x10100 / _x12122 // _x10101 (total annual income per nucleus household member) is missing, but can be created by dividing _x10100 (total annual household income) with _x12122 (household nucleus size). 
-merge 1:1 QID using hhclean1.dta, keepusing (T) keep (match master)
+merge 1:1 QID using "${cleandata_w2}/hhclean.dta", keepusing (T) keep (match master) nogen
 merge 1:1 QID using transfclean1.dta, keepusing(_x10093) keep(match master) nogen // <- Is already included in the clean dataset
 drop _x10093c _x10093k // They will not be used anymore and otherwise leads to error code later, when _x10093 get's used, because of ambiguity
-save hhincclean1.dta, replace
-erase transfclean1.dta
+save hhincclean1, replace
 
 //// wave 7
-// T has to be added by merging with hhclean1.dta. _x10093 needs to be replaced as it's corrupted. Preparations for this were done in the "MERGE INCOME DATA" block.
+// T has to be added by merging with hhclean.dta. _x10093 needs to be replaced as it's corrupted. Preparations for this were done in the "MERGE INCOME DATA" block.
 cd "${cleandata_w7}"
 use hhincclean.dta, clear
 gen _x10101 = _x10100 / _x12122 // _x10101 (total annual income per nucleus household member) is missing, but can be created by dividing _x10100 (total annual household income) with _x12122 (household nucleus size). 
-merge 1:1 QID using hhclean1.dta, keepusing (T) keep (match master)
-//merge 1:1 QID using transfclean1.dta, keepusing(_x10093) keep(match master) nogen // <- Is already included in the clean dataset
+merge 1:1 QID using "${cleandata_w2}/hhclean.dta", keepusing (T) keep (match master) nogen
 drop _x10093c _x10093k // They will not be used anymore and otherwise leads to error code later, when _x10093 get's used, because of ambiguity
-save hhincclean1.dta, replace
+save hhincclean1, replace
 ***...
 
 *****************************************************************************
