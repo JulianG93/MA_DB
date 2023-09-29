@@ -68,7 +68,10 @@ global merge_w8 "$data/merge_w8"
 						
 global part_2			1					
 global part_3			1
-global part_4			1 // Part 4 was added and runs the 2.3.0.preparation.do-file
+global part_4			1 // Part 4 was added and runs the 2.3.0.preparation.do-file which adds the second order terms for waves 1 and 2.
+global part_5			0 // Part 5 was added and runs the 2.3.0.1.preparation.do-file which adds the second order terms for waves 3 and 5 and saves them as dataset_v2.1. (There are several preparation.do-files needed to build the second order terms of all waves, because STATA can't handle as many variables simultaneously.)
+global part_6			0 // Part 6 was added and runs the 2.3.0.2.preparation.do-file which adds the second order terms for waves 6 and 7 and saves them as dataset_v2.2.
+global part_7			1 // Part 7 was added and runs the 2.3.0.3.preparation.do-file which adds the second order terms for wave 8 and saves them as datase_v2.3.
 *...
 
 
@@ -91,6 +94,27 @@ do "$do/2.2.merging.do"
 
 if $part_4{
 do "$do/2.3.0.preparation.do"
+}
+
+*****************************************************************************
+* SECTION 5 - XYZ ***********************************************************
+
+if $part_5{
+do "$do/2.3.0.1.preparation.do"
+}
+
+*****************************************************************************
+* SECTION 6 - XYZ ***********************************************************
+
+if $part_6{
+do "$do/2.3.0.2.preparation.do"
+}
+
+*****************************************************************************
+* SECTION 7 - XYZ ***********************************************************
+
+if $part_7{
+do "$do/2.3.0.3.preparation.do"
 }
 
 ***...
