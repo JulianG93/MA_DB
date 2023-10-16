@@ -733,8 +733,7 @@ cd "${cleandata_w8}"
 // Adding 10080: Remittances received from absent HH members
 use members.dta, clear
 sort interview__key
-drop if v21022a==1 // v21022a==1 means that the person is still a HH member and not absent, so these observations are deleted
-by interview__key: egen _x10080= sum(v21020) // v21020: Amount of money/value of gifts the HH received between 05/18-04/19
+by interview__key: egen _x10080= sum(v21020) if v21019a__2==1 // v21020: Amount of money/value of gifts the HH received between 05/18-04/19, v21019a__2==1 means "Did HH member send money to the HH while being absent ==1 == yes"
 by interview__key, sort: gen nvals = _n == 1 // Mark and drop all but the first observation of each interview__key (HH), so that per HH only one observation remains for merging later. This will be repeated in the following blocks for all datasets.
 drop if nvals!=1
 save membersforw8.dta, replace
