@@ -415,7 +415,7 @@ replace hhh_canmanage=1 if hhh_canmanage>1 // If there is more than one househol
 replace hhhprim=1 if hhhprim>1 // If there is more than one HH-head with no or primary education up to grade 4 the variable will become bigger than 1, but as it is a Dummy variable these values need to be replaced by 1.
 replace hhhprim7=1 if hhhprim7>1 // If there is more than one HH-head with no or primary education up to grade 7 the variable will become bigger than 1, but as it is a Dummy variable these values need to be replaced by 1.
 replace hhhsec=1 if hhhsec>1 // If there is more than one HH-head with secondary education the variable will become bigger than 1, but as it is a Dummy variable these values need to be replaced by 1.
-replace hhhgen=1 if hhhgen<=1.5 // If there is more than one HH-head per household and if they have different genders, hhhgen can become bigger than one. If the majority of the HH-heads is male, hhhgen will be below 1.5 (or at 1.5 if the number of male HH-heads equals the number of female HH-heads), so these HH will be considered as male-headed.
+replace hhhgen=1 if hhhgen >1 & hhhgen <=1.5 // If there is more than one HH-head per household and if they have different genders, hhhgen can become bigger than one. If the majority of the HH-heads is male, hhhgen will be below 1.5 (or at 1.5 if the number of male HH-heads equals the number of female HH-heads), so these HH will be considered as male-headed.
 replace hhhgen=0 if hhhgen>1.5 // On the opposite, if there are several household heads and the majority is female, hhhgen will be above 1.5 and these households will not be considered male-headed.
 replace hhhread=1 if hhhread>1 // If there is more than one HH-head that can read the variable will become bigger than 1, but as it is a Dummy variable these values need to be replaced by 1.
 replace hhh1_worse=1 if hhh1_worse>1 // If there is more than one household head given per HH and they're worse than 1 year ago hhh1_worse will become bigger than 1, but it should be 1 as it is a Dummy variable and not 2,3,4... etc.
@@ -923,6 +923,7 @@ if "`wave'"=="w1"{
 		replace _x`root'=. if _x`root'==98 // Replacing 98 with missing values as they are used as a label for 'no answer'.
 		replace _x`root'=. if _x`root'==99 // Replacing 99 with missing values as they are used as a label for missing values.
 	}
+	drop _x42002
 	cap rename _x42003a _x42002 // In wave 1 the variable 42003a has the definition of variable 42002 in the following waves.
 	replace _x42002=101 if _x42002==11 // In wave 1 there's only 'fragrant rice' (11) instead of 101 as in the following waves. While it's not a perfect substitute, 'fragrant rice' almost always equals 'jasmine rice' in the following waves.
 	replace _x42002=103 if _x42002==13 // In wave 1 'glutinous rice' is 13 instead of 103 as in the following waves.
