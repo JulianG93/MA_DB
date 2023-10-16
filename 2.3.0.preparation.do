@@ -122,12 +122,11 @@ cd "$do"
 do 2.3.0.ylists.do
 do 2.3.0.xlists.do
 
-//do 2.3.2.impute.do //make sure that all outcome vars and pscore vars are imputed. Put as a comment, because impute2 isn't working anymore. Replacement needs to be found
 
 
 
 ** PRICE **
-foreach wave in  w2 w3 w5 w6 w7 w8 {
+foreach wave in w2 w3 w5 w6 w7 w8 {
 replace `wave'pricekg =. if `wave'ricekgsld==0 //corrects if prices were imputetd or set to zero
 replace `wave'ppricekg =. if `wave'paddkgsld==0 //where actually no rice was sold
 sum *pricekg *kgsld
@@ -141,9 +140,15 @@ sum *pricekg *kgsld
 
 //generate total income with outlier cleaned income variables
 //dont generate w1income as it somewhat differs from other waves
-foreach wave in w2 w3 w5 w6 w7 w8 { // shouldn't w1 be used as well?
-egen `wave'income = rowtotal(`wave'_x10080  `wave'_x10084 `wave'_x10085 `wave'_x10086 `wave'_x10087 `wave'_x10088 )
-winsor2 `wave'income, c(0 99) replace
+foreach wave in w1 w2 w3 w5 w6 w7 w8 {
+	if "`wave'"=="w1" { // Attention: Self-Employment income (10087) is missing for wave 1, because variable doesn't exist/can't be calculated, as the variable that gives amounts of days worked is missing.
+		egen `wave'income = rowtotal(`wave'_x10080  `wave'_x10084 `wave'_x10085 `wave'_x10086 `wave'_x10088)
+		winsor2 `wave'income, c(0 99) replace
+	}
+	else {
+		egen `wave'income = rowtotal(`wave'_x10080  `wave'_x10084 `wave'_x10085 `wave'_x10086 `wave'_x10087 `wave'_x10088)
+		winsor2 `wave'income, c(0 99) replace
+	}
 }
 *`wave'_x10081 `wave'_x10082 `wave'_x10083 `wave'_x10091 `wave'_x10092 `wave'_x10093 `wave'_x10094
 *lnskew0 transform?
@@ -179,7 +184,7 @@ gen w2richD50 = (w2income>r(p50)) if w2income!=.
 *for missing values).
 
 //rice production index
-foreach wave in w2 w3 w5 w6 w7 w8 {
+foreach wave in w2 w3 w5 w6 w7 w8 w1 {
 foreach var in ricekgtotL expendL ricelandL _x91009_aL {
 sum w2`var' if w3registered==1
 gen z_`wave'`var' = (`wave'`var' - r(mean))/r(sd)
@@ -199,6 +204,7 @@ egen `wave'iga_index = rowtotal( `wave'_x43202n `wave'_x44002n `wave'_x50002n `w
 *
 
 
+do 2.3.2.impute.do //make sure that all outcome vars and pscore vars are imputed. Was changed to this line, because before the imputation the variables income, rice_index and iga_index have to be created.
 
 
 ** FINAL DATA SET **
@@ -213,7 +219,7 @@ gen w8n60relfr=.
 
 keep $ylistw5 $ylistw3 $ylistw2 $ylistw6 $ylistw7 $ylistw8 $noimpute_ylistw5 $noimpute_ylistw3 $noimpute_ylistw2 $noimpute_ylistw6 $noimpute_ylistw7 $noimpute_ylistw8 $xlist $xlist_balance $treatment w5whynotreg09 QID T hhid prov vill *_x1008* *_x1009* 
 
-  
+
 cd "$data"
 save dataset_v2, replace
 
