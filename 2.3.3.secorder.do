@@ -3,11 +3,11 @@
 //adjust local to the variables that you wish to create 2.order terms from
 global dataset_v2 "$home/2_STATA/data/dataset_v2" // Still needs to be adjusted
 
-unab varlist: w1* w2* // wave 1 and 2 are used
+unab varlist: w2* // wave 2 is used
 //adjust which dataset the variables come from and should be stored in
 local dataset "$dataset_v2"
 
-sysdir set PLUS "$data" // Changing the package installation path, because I don't have access to the default installation path, when using stata remotely
+
 cap which descsave
 if _rc ssc install descsave
 *****************************************************************************
@@ -82,3 +82,4 @@ dis (((`varnum')^2)+(`varnum'))/2
 
 
 
+*
