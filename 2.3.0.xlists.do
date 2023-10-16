@@ -177,11 +177,94 @@ dis  "$xlist_balance"
 
 // w2corncass
 
-//XLIST w2 w3 w5 for FE ANALYSIS
-foreach wave in w2 w3 w5 w6 w7 w8 {
+//XLIST w3 w5 w6 w7 w8 for FE ANALYSIS
+foreach wave in w3 w5 {
+#delimit ;
+
+global xlist`wave' `"
+
+`wave'ricekgtot
+`wave'ricekgsld
+`wave'_x41003
+`wave'_x10093
+`wave'_x31024
+`wave'_x32003
+`wave'hhhprim
+`wave'hhhage
+`wave'under6
+`wave'hhhgen
+`wave'_x12122
+`wave'_x31002
+`wave'_x31004
+`wave'_x31005a
+`wave'_x31025
+`wave'_x32004
+`wave'_x32003a
+`wave'_x71514
+`wave'_x71133c
+`wave'_x32010
+`wave'expend
+`wave'_x91009_a
+`wave'agriloanD
+`wave'o14_jobs
+`wave'income
+`wave'ricelandS
+`wave'_x10084
+`wave'_x10085
+`wave'_x10086
+`wave'_x10087
+`wave'_x10088
+`wave'_x10080
+`wave'_x43202n
+`wave'_x44002n
+`wave'_x50002n
+`wave'_x60002n
+
+"'
+;
+#delimit cr
+dis  "$xlist`wave'"
+}
+
+foreach wave in w6 w7 w8 { // 12122 doesn't exist for waves 6 and 7
 #delimit ;
 global xlist`wave' `"
-          
+
+`wave'ricekgtot
+`wave'ricekgsld
+`wave'_x41003
+`wave'_x10093
+`wave'_x31024
+`wave'_x32003
+`wave'hhhprim
+`wave'hhhage
+`wave'under6
+`wave'hhhgen
+`wave'_x31002
+`wave'_x31004
+`wave'_x31005a
+`wave'_x31025
+`wave'_x32004
+`wave'_x32003a
+`wave'_x71514
+`wave'_x71133c
+`wave'_x32010
+`wave'expend
+`wave'_x91009_a
+`wave'agriloanD
+`wave'o14_jobs
+`wave'income
+`wave'ricelandS
+`wave'_x10084
+`wave'_x10085
+`wave'_x10086
+`wave'_x10087
+`wave'_x10088
+`wave'_x10080
+`wave'_x43202n
+`wave'_x44002n
+`wave'_x50002n
+`wave'_x60002n
 
 "'
 ;
