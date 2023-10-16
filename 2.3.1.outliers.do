@@ -1,5 +1,4 @@
 ** OUTLIERS *****************************************************************
-
 ***********************!!!!!!!!!!!ADJUST!!!!!!!!!!!!*************************
 //adjust local to the variables that you wish to log and check for outliers
 unab varlist: w*
@@ -10,7 +9,8 @@ local shares " `Svars' w3o14_oc_ag  w3o14_oc_na   w3o14_oc_ue  w3o14_oc_st  w3o1
 local varlist2 : list varlist -  shares
 dis in red "`shares'"
 *****************************************************************************
-
+//destring w1_x10002 w1_x10003 w1_x10004, replace
+//destring w2_x10002 w2_x10003 w2_x10004, replace
 
 
 //identify vars with outliers
@@ -69,8 +69,8 @@ foreach var of varlist  `outlier_vars' {
 	//replace highest and lowest percentile with "." if these values are beyond 4 SD 
 	dis "Attention: outliers dropped:"
 	quiet summarize `var', d
-	replace `var' =0 if `var' > (r(p50)+(3*r(sd))) // Changed . to 0, because otherwise building the log further down will not work, as Stata can't perform this operation on an empty local macro.
-	replace `var' =0 if `var' < (r(p50)-(3*r(sd))) // Changed . to 0, because otherwise building the log further down will not work, as Stata can't perform this operation on an empty local macro.
+	replace `var' =. if `var' > (r(p50)+(3*r(sd))) // Changed . to 0, because otherwise building the log further down will not work, as Stata can't perform this operation on an empty local macro.
+	replace `var' =. if `var' < (r(p50)-(3*r(sd))) // Changed . to 0, because otherwise building the log further down will not work, as Stata can't perform this operation on an empty local macro.
 	
 	
 	//logarithm
