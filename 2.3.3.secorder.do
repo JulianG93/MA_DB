@@ -3,7 +3,7 @@
 //adjust local to the variables that you wish to create 2.order terms from
 global dataset_v2 "$home/2_STATA/data/dataset_v2" // Still needs to be adjusted
 
-unab varlist: w2* // wave 2 is used
+unab varlist: $xlist_base $xlist_all // wave 2 is used, but only the 36 variables used to build the control variables
 //adjust which dataset the variables come from and should be stored in
 local dataset "$dataset_v2"
 
@@ -78,7 +78,6 @@ dis `r(k)'
 dis (((`varnum')^2)+(`varnum'))/2
 
 *window stopbox rusure "Check the number of QU-vars in the dataset, please. If x is the number of first order terms which served as input in the secorder.do dofile then there should now be:  y=(x^2 + x)/2  QU-vars in the dataset. This condition holds if the last two numbers displayed in the results window differ only by the amount of non QU vars in the dataset."
-
 
 
 
