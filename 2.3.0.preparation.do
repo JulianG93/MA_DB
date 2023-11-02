@@ -198,7 +198,7 @@ drop z_`wave'*
 drop *temp
 
 //activity diversification index
-foreach wave in w2 w3 w5 w6 w7 w8{
+foreach wave in w1 w2 w3 w5 w6 w7 w8{
 egen `wave'iga_index = rowtotal( `wave'_x43202n `wave'_x44002n `wave'_x50002n `wave'_x60002n )
 }
 *
@@ -230,4 +230,3 @@ cd "$do"
 do 2.3.3.secorder.do
 cd "$data"
 saveold dataset_v2, replace
-
